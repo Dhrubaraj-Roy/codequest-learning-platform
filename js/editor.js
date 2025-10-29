@@ -13,6 +13,7 @@ class CodeEditor {
         this.editor.addEventListener('input', () => this.handleInput());
         this.editor.addEventListener('keydown', (e) => this.handleKeyDown(e));
         this.editor.addEventListener('paste', (e) => this.handlePaste(e));
+        this.editor.addEventListener('scroll', () => this.syncScroll());
 
         // Initial highlight if there's content
         if (this.editor.textContent.trim()) {
@@ -24,6 +25,7 @@ class CodeEditor {
         if (this.isUpdating) return;
         this.highlight();
         this.updateLineNumbers();
+        this.syncScroll();
     }
 
     handleKeyDown(e) {
@@ -303,8 +305,32 @@ class CodeEditor {
         const lines = this.getPlainText().split('\n');
         const lineNumbersElement = document.getElementById('lineNumbers');
         if (lineNumbersElement) {
-            lineNumbersElement.textContent = lines.map((_, i) => i + 1).join('\n');
+            lineNumbersElement.innerHTML = lines.map((_, i) => {
+                const lineNum = i + 1;
+                return `<div class="line-num" data-line="${lineNum}">${lineNum}</div>`;
+            }).join('');
         }
+    }
+
+    syncScroll() {
+        const lineNumbersElement = document.getElementById('lineNumbers');
+        if (lineNumbersElement) {
+            lineNumbersElement.scrollTop = this.editor.scrollTop;
+        }
+    }
+
+    highlightErrorLine(lineNumber) {
+        const lineElements = document.querySelectorAll('.line-num');
+        lineElements.forEach(el => el.classList.remove('error-line'));
+
+        if (lineNumber && lineElements[lineNumber - 1]) {
+            lineElements[lineNumber - 1].classList.add('error-line');
+        }
+    }
+
+    clearErrorHighlights() {
+        const lineElements = document.querySelectorAll('.line-num');
+        lineElements.forEach(el => el.classList.remove('error-line'));
     }
 
     setLanguage(language) {
@@ -433,6 +459,115 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 100);
 });
 
+// Syntax Validation Functions
+function validateHTML(code) {
+    const errors = [];
+
+    // Check for unclosed tags
+    const openTags = [];
+    const tagRegex = /<\/?([a-zA-Z][a-zA-Z0-9]*)[^>]*>/g;
+    let match;
+    let lineNumber = 1;
+
+    const lines = code.split('\n');
+
+    lines.forEach((line, index) => {
+        let lineMatch;
+        const lineTagRegex = /<\/?([a-zA-Z][a-zA-Z0-9]*)[^>]*>/g;
+
+        while ((lineMatch = lineTagRegex.exec(line)) !== null) {
+            const fullTag = lineMatch[0];
+            const tagName = lineMatch[1].toLowerCase();
+
+            // Skip self-closing tags
+            if (fullTag.endsWith('/>') || ['img', 'br', 'hr', 'input', 'meta', 'link'].includes(tagName)) {
+                continue;
+            }
+
+            if (fullTag.startsWith('</')) {
+                // Closing tag
+                if (openTags.length === 0 || openTags[openTags.length - 1].name !== tagName) {
+                    errors.push({
+                        line: index + 1,
+                        message: `Unexpected closing tag </${tagName}>`,
+                        type: 'error'
+                    });
+                } else {
+                    openTags.pop();
+                }
+            } else {
+                // Opening tag
+                openTags.push({ name: tagName, line: index + 1 });
+            }
+        }
+    });
+
+    // Check for unclosed tags
+    openTags.forEach(tag => {
+        errors.push({
+            line: tag.line,
+            message: `Unclosed tag <${tag.name}>`,
+            type: 'warning'
+        });
+    });
+
+    return errors;
+}
+
+function validateCSS(code) {
+    const errors = [];
+    let braceCount = 0;
+
+    const lines = code.split('\n');
+
+    lines.forEach((line, index) => {
+        // Count braces
+        const openBraces = (line.match(/{/g) || []).length;
+        const closeBraces = (line.match(/}/g) || []).length;
+
+        braceCount += openBraces - closeBraces;
+
+        // Check for missing semicolons (basic check)
+        if (line.includes(':') && !line.includes('{') && !line.trim().endsWith(';') && !line.trim().endsWith('{') && line.trim() !== '' && !line.trim().startsWith('/*') && !line.trim().startsWith('*')) {
+            errors.push({
+                line: index + 1,
+                message: 'Missing semicolon',
+                type: 'warning'
+            });
+        }
+    });
+
+    if (braceCount !== 0) {
+        errors.push({
+            line: lines.length,
+            message: braceCount > 0 ? 'Unclosed brace {' : 'Extra closing brace }',
+            type: 'error'
+        });
+    }
+
+    return errors;
+}
+
+function validateJavaScript(code) {
+    const errors = [];
+
+    try {
+        // Try to parse with Function constructor (safer than eval for validation)
+        new Function(code);
+    } catch (error) {
+        const lineMatch = error.message.match(/line (\d+)/);
+        const line = lineMatch ? parseInt(lineMatch[1]) : null;
+
+        errors.push({
+            line: line,
+            message: error.message,
+            type: 'error'
+        });
+    }
+
+    return errors;
+}
+
 // Run Code Function
 function runCode() {
     if (!editor) {
@@ -448,7 +583,34 @@ function runCode() {
         return;
     }
 
+    // Clear previous errors
+    editor.clearErrorHighlights();
+
     console.log('Running code...', 'Language:', editor.language);
+
+    // Validate syntax before running
+    let validationErrors = [];
+    if (editor.language === 'html') {
+        validationErrors = validateHTML(code);
+    } else if (editor.language === 'css') {
+        validationErrors = validateCSS(code);
+    } else if (editor.language === 'javascript') {
+        validationErrors = validateJavaScript(code);
+    }
+
+    // Display validation errors
+    if (validationErrors.length > 0) {
+        validationErrors.forEach(error => {
+            logToConsole(
+                `Line ${error.line || '?'}: ${error.message}`,
+                error.type
+            );
+
+            if (error.line) {
+                editor.highlightErrorLine(error.line);
+            }
+        });
+    }
 
     try {
         if (editor.language === 'html') {
@@ -550,9 +712,45 @@ function logToConsole(message, type = 'log') {
     const consoleOutput = document.getElementById('console');
     const messageElement = document.createElement('div');
     messageElement.className = `console-message console-${type}`;
-    messageElement.textContent = `[${type.toUpperCase()}] ${message}`;
+
+    // Add timestamp
+    const timestamp = new Date().toLocaleTimeString('en-US', {
+        hour12: false,
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    });
+
+    // Add icon based on type
+    let icon = '';
+    switch(type) {
+        case 'error':
+            icon = '✖';
+            break;
+        case 'warning':
+            icon = '⚠';
+            break;
+        case 'info':
+            icon = '✓';
+            break;
+        default:
+            icon = '•';
+    }
+
+    messageElement.innerHTML = `
+        <span class="console-time">[${timestamp}]</span>
+        <span class="console-icon">${icon}</span>
+        <span class="console-text">${escapeHtml(message)}</span>
+    `;
+
     consoleOutput.appendChild(messageElement);
     consoleOutput.scrollTop = consoleOutput.scrollHeight;
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 function clearConsole() {

@@ -180,6 +180,24 @@ body {
     user-select: none;
     min-width: 50px;
     border-right: 1px solid var(--border-color);
+    overflow-y: hidden;
+}
+
+.line-num {
+    padding: 0 5px;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.line-num:hover {
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+.line-num.error-line {
+    background-color: rgba(244, 135, 113, 0.2);
+    color: var(--error-color);
+    font-weight: bold;
+    border-left: 3px solid var(--error-color);
 }
 
 /* Code Editor */
@@ -289,20 +307,86 @@ body {
 }
 
 .console-message {
-    margin-bottom: 5px;
-    padding: 3px 0;
+    margin-bottom: 8px;
+    padding: 6px 8px;
+    border-radius: 3px;
+    background-color: rgba(255, 255, 255, 0.03);
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 13px;
+    line-height: 1.5;
+    transition: background-color 0.2s;
+}
+
+.console-message:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.console-time {
+    color: var(--text-secondary);
+    font-size: 11px;
+    opacity: 0.7;
+    flex-shrink: 0;
+}
+
+.console-icon {
+    flex-shrink: 0;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.console-text {
+    flex: 1;
+    word-break: break-word;
 }
 
 .console-error {
+    border-left: 3px solid var(--error-color);
+}
+
+.console-error .console-icon {
+    color: var(--error-color);
+}
+
+.console-error .console-text {
     color: var(--error-color);
 }
 
 .console-warn {
+    border-left: 3px solid var(--warning-color);
+}
+
+.console-warn .console-icon {
+    color: var(--warning-color);
+}
+
+.console-warn .console-text {
     color: var(--warning-color);
 }
 
 .console-info {
+    border-left: 3px solid var(--success-color);
+}
+
+.console-info .console-icon {
     color: var(--success-color);
+}
+
+.console-info .console-text {
+    color: var(--success-color);
+}
+
+.console-log {
+    border-left: 3px solid var(--text-secondary);
+}
+
+.console-log .console-icon {
+    color: var(--text-secondary);
+}
+
+.console-log .console-text {
+    color: var(--text-primary);
 }
 
 /* Preview Controls & Toggle Switch */
