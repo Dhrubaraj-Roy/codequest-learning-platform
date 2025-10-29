@@ -305,6 +305,62 @@ body {
     color: var(--success-color);
 }
 
+/* Preview Controls & Toggle Switch */
+.preview-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.toggle-switch {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.toggle-switch input[type="checkbox"] {
+    display: none;
+}
+
+.toggle-slider {
+    position: relative;
+    width: 40px;
+    height: 20px;
+    background-color: var(--bg-tertiary);
+    border-radius: 10px;
+    transition: background-color 0.3s;
+    border: 1px solid var(--border-color);
+}
+
+.toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background-color: var(--text-secondary);
+    top: 1px;
+    left: 2px;
+    transition: transform 0.3s, background-color 0.3s;
+}
+
+.toggle-switch input[type="checkbox"]:checked + .toggle-slider {
+    background-color: var(--accent-color);
+}
+
+.toggle-switch input[type="checkbox"]:checked + .toggle-slider::before {
+    transform: translateX(20px);
+    background-color: white;
+}
+
+.toggle-label {
+    font-size: 12px;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
 /* Scrollbar Styling */
 ::-webkit-scrollbar {
     width: 10px;

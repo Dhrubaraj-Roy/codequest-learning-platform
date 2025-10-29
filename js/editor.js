@@ -331,10 +331,24 @@ class CodeEditor {
 
 // Initialize Editor
 let editor;
+let autoRunEnabled = true; // Auto-run enabled by default
 
 document.addEventListener('DOMContentLoaded', () => {
     const editorElement = document.getElementById('codeEditor');
     editor = new CodeEditor(editorElement);
+
+    // Set initial starter code
+    const initialCode = `<!DOCTYPE html>
+<html>
+<head>
+    <title>My First Page</title>
+</head>
+<body>
+    <h1>Hello, CodeQuest!</h1>
+    <p>Start typing to see real-time preview...</p>
+</body>
+</html>`;
+    editor.setCode(initialCode);
 
     // Language Selector
     const languageSelector = document.getElementById('languageSelector');
@@ -393,35 +407,63 @@ document.addEventListener('DOMContentLoaded', () => {
         clearConsole();
     });
 
-    // Auto-run on HTML changes (optional - uncomment if desired)
-    // editorElement.addEventListener('input', debounce(() => {
-    //     if (editor.language === 'html') {
-    //         runCode();
-    //     }
-    // }, 1000));
+    // Auto-Run Toggle
+    const autoRunToggle = document.getElementById('autoRunToggle');
+    autoRunToggle.addEventListener('change', (e) => {
+        autoRunEnabled = e.target.checked;
+        if (autoRunEnabled) {
+            runCode(); // Run immediately when enabled
+            logToConsole('Auto-run enabled', 'info');
+        } else {
+            logToConsole('Auto-run disabled', 'info');
+        }
+    });
+
+    // Real-time Preview - Auto-run on code changes
+    editorElement.addEventListener('input', debounce(() => {
+        if (autoRunEnabled) {
+            runCode();
+        }
+    }, 800)); // 800ms debounce for smooth typing experience
+
+    // Run initial code on page load
+    setTimeout(() => {
+        runCode();
+        logToConsole('Editor ready! Auto-run is enabled.', 'info');
+    }, 100);
 });
 
 // Run Code Function
 function runCode() {
+    if (!editor) {
+        console.error('Editor not initialized');
+        return;
+    }
+
     const code = editor.getCode();
     const preview = document.getElementById('preview');
-    const consoleOutput = document.getElementById('console');
+
+    if (!preview) {
+        console.error('Preview iframe not found');
+        return;
+    }
+
+    console.log('Running code...', 'Language:', editor.language);
 
     try {
         if (editor.language === 'html') {
             // Create a complete HTML document
-            const htmlDoc = `
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <meta charset="UTF-8">
-                    <style>
-                        body { margin: 10px; font-family: Arial, sans-serif; }
-                    </style>
-                </head>
-                <body>
-                    ${code}
-                    <script>
+            const htmlDoc = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { margin: 10px; font-family: Arial, sans-serif; }
+    </style>
+</head>
+<body>
+    ${code}
+    <script>
                         // Capture console logs
                         (function() {
                             const originalLog = console.log;
@@ -457,6 +499,7 @@ function runCode() {
             `;
 
             preview.srcdoc = htmlDoc;
+            console.log('HTML injected into iframe');
             logToConsole('Code executed successfully', 'info');
         } else if (editor.language === 'javascript') {
             clearPreview();

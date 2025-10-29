@@ -47,9 +47,16 @@
             <div class="preview-panel">
                 <div class="panel-header">
                     <h3>Live Preview</h3>
-                    <button id="clearPreviewBtn" class="btn-small">Clear</button>
+                    <div class="preview-controls">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="autoRunToggle" checked>
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-label">Auto-Run</span>
+                        </label>
+                        <button id="clearPreviewBtn" class="btn-small">Clear</button>
+                    </div>
                 </div>
-                <iframe id="preview" class="preview-frame" sandbox="allow-scripts"></iframe>
+                <iframe id="preview" class="preview-frame" sandbox="allow-scripts allow-same-origin"></iframe>
             </div>
         </div>
 
