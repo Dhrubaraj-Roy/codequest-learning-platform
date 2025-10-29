@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeQuest - Interactive Code Editor</title>
+    <link rel="stylesheet" href="css/editor.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="editor-header">
+            <h1>CodeQuest Code Editor</h1>
+            <div class="header-controls">
+                <select id="languageSelector" class="language-select">
+                    <option value="html">HTML</option>
+                    <option value="css">CSS</option>
+                    <option value="javascript">JavaScript</option>
+                </select>
+                <button id="formatBtn" class="btn">Format Code</button>
+                <button id="resetBtn" class="btn btn-secondary">Reset</button>
+                <button id="runBtn" class="btn btn-primary">Run Code</button>
+            </div>
+        </header>
+
+        <!-- Main Editor Layout -->
+        <div class="editor-layout">
+            <!-- Code Editor Panel -->
+            <div class="editor-panel">
+                <div class="panel-header">
+                    <h3>Code Editor</h3>
+                    <span class="language-badge" id="languageBadge">HTML</span>
+                </div>
+                <div class="editor-wrapper">
+                    <div class="line-numbers" id="lineNumbers">1</div>
+                    <div
+                        id="codeEditor"
+                        class="code-editor"
+                        contenteditable="true"
+                        spellcheck="false"
+                        data-language="html"
+                    ><!-- Write your HTML code here --></div>
+                </div>
+            </div>
+
+            <!-- Live Preview Panel -->
+            <div class="preview-panel">
+                <div class="panel-header">
+                    <h3>Live Preview</h3>
+                    <div class="preview-controls">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="autoRunToggle" checked>
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-label">Auto-Run</span>
+                        </label>
+                        <button id="clearPreviewBtn" class="btn-small">Clear</button>
+                    </div>
+                </div>
+                <iframe id="preview" class="preview-frame" sandbox="allow-scripts allow-same-origin"></iframe>
+            </div>
+        </div>
+
+        <!-- Console Panel -->
+        <div class="console-panel">
+            <div class="panel-header">
+                <h3>Console</h3>
+                <button id="clearConsoleBtn" class="btn-small">Clear</button>
+            </div>
+            <div id="console" class="console-output"></div>
+        </div>
+    </div>
+
+    <script src="js/editor.js"></script>
+</body>
+</html>
